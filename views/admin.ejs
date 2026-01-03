@@ -1,57 +1,381 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin Panel</title>
+  <meta charset="UTF-8">
+  <title>Database Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  
+  <link rel="preload" href="https://files.catbox.moe/7gfnco.jpg" as="image">
+  <link rel="preload" href="https://files.catbox.moe/jolozc.jpg" as="image">
+  
   <style>
-    :root { --primary: #4361ee; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; }
-    body { font-family: 'Poppins', sans-serif; background: #f1f5f9; padding: 20px; }
-    .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 900px; margin: auto; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    .btn { border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: white; }
-    .btn-danger { background: var(--danger); } .btn-warning { background: var(--warning); } .btn-success { background: var(--success); }
-    .alert { background: #dcfce7; color: #166534; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4; 
+      --danger: #ef4444;
+      --dark: #1e293b; 
+      --light: #f8fafc; 
+      --gray: #64748b;
+      --gray-light: #e2e8f0;
+      --online-green: #38c172; 
+      --neon-blue: #4361ee; 
+      --secondary-dark: #f0f4f8; 
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      /* Background warna terang dari kode Anda sebelumnya (f1f5f9) */
+      background-color: #f1f5f9; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    /* KOTAK UTAMA: SUDUT SANGAT MEMBULAT (1.75rem) */
+    .login-container {
+      background-color: white;
+      /* PERUBAHAN UTAMA: Radius lebih besar agar bentuknya halus seperti di gambar */
+      border-radius: 1.75rem; 
+      /* Box shadow disesuaikan agar tetap terlihat */
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      padding: 0; 
+      overflow: hidden; 
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* --- GAYA HEADER --- */
+    .header-image-wrapper {
+        background-color: var(--secondary-dark); 
+        position: relative;
+        height: 250px; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center; 
+        overflow: hidden;
+        /* PERUBAHAN: Radius mengikuti login-container */
+        border-top-left-radius: 1.75rem;
+        border-top-right-radius: 1.75rem;
+    }
+
+    .header-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.7); 
+    }
+
+    .profile-info {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        color: white; 
+    }
+    
+    .profile-picture {
+        width: 80px; 
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid white; 
+        box-shadow: 0 0 0 3px var(--neon-blue), 0 0 15px rgba(67, 97, 238, 1); 
+        margin-bottom: 5px;
+    }
+
+    .profile-name {
+        font-size: 1.1rem; 
+        font-weight: 600;
+        color: var(--light); 
+        margin-top: 5px;
+    }
+    
+    .online-status {
+        display: inline-block;
+        padding: 3px 12px;
+        background-color: var(--online-green);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 20px;
+        margin-top: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    /* --- AKHIR GAYA HEADER --- */
+
+    /* Area Konten (Form) */
+    .content-area {
+        padding: 2rem;
+        padding-top: 2rem; 
+    }
+
+    .main-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--dark); 
+        text-align: center;
+        margin-bottom: 1.5rem;
+        margin-top: 0;
+    }
+
+    .login-form {
+      margin-top: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--dark);
+      font-weight: 500;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      border: 1px solid var(--gray-light);
+      /* PERUBAHAN: Radius lebih besar untuk input */
+      border-radius: 0.75rem;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      background-color: var(--light); 
+      color: var(--dark);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    .input-icon {
+      position: absolute;
+      top: 50%;
+      left: 1rem;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 1rem;
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 1rem;
+      transform: translateY(-50%);
+      color: var(--gray);
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.75rem;
+      /* PERUBAHAN: Radius lebih besar untuk tombol */
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 10px rgba(67, 97, 238, 0.4);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .alert {
+      padding: 0.9rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background-color: #fee2e2;
+      color: var(--danger);
+      border-left: 4px solid var(--danger);
+      font-size: 0.95rem;
+    }
+
+    .alert-icon {
+      font-size: 1.1rem;
+    }
+
+    /* --- GAYA LINK WA/SALURAN --- */
+    .link-group {
+        margin-top: 2rem; 
+        text-align: center;
+    }
+
+    .link-group > p {
+        color: var(--gray);
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .contact-link {
+        display: block;
+        text-align: left;
+        padding: 0.7rem 0;
+        color: var(--dark); 
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .contact-link i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .buy-link {
+        color: #00b894; 
+        margin-bottom: 5px;
+    }
+    
+    .channel-link {
+        color: #ff7675; 
+    }
+    /* --- AKHIR GAYA LINK --- */
   </style>
 </head>
 <body>
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2>Admin Dashboard</h2>
-      <a href="/logout" style="color:red; text-decoration:none;">Logout</a>
+  <div class="login-container">
+    
+    <div class="header-image-wrapper">
+      <img src="https://files.catbox.moe/7gfnco.jpg" alt="Background Header" class="header-image">
+      
+      <div class="profile-info">
+        <img src="https://files.catbox.moe/jolozc.jpg" alt="Raza Mods" class="profile-picture">
+        <div class="profile-name">RAZA MODS</div>
+        <div class="online-status">ONLINE</div>
+      </div>
     </div>
+    
+    <div class="content-area">
+        <div class="main-title" id="title">Ochobot Database</div>
 
-    <% if (message) { %> <div class="alert"><%= message %></div> <% } %>
+        
 
-    <table>
-      <thead>
-        <tr><th>Nomor</th><th>Status</th><th>Aksi</th></tr>
-      </thead>
-      <tbody>
-        <% data.forEach(item => { %>
-          <tr>
-            <td><%= item.number %></td>
-            <td><strong><%= item.status %></strong></td>
-            <td>
-              <form action="/hapus-nomor" method="POST" style="display:inline;" onsubmit="return confirm('Hapus?')">
-                <input type="hidden" name="number" value="<%= item.number %>">
-                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i></button>
-              </form>
+        <form class="login-form" method="POST" action="/login-admin">
+          <div class="form-group">
+            <label class="form-label" for="password">Admin Password</label>
+            <div class="password-wrapper">
+              <i class="fas fa-lock input-icon"></i>
+              <input type="password" id="password" name="password" class="form-control" placeholder="Enter admin password" required>
+              <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt"></i>
+            Login
+          </button>
+        </form>
 
-              <form action="/status-nomor" method="POST" style="display:inline;">
-                <input type="hidden" name="number" value="<%= item.number %>">
-                <input type="hidden" name="status" value="<%= item.status === 'active' ? 'blacklist' : 'active' %>">
-                <button type="submit" class="btn <%= item.status === 'active' ? 'btn-warning' : 'btn-success' %>">
-                  <i class="fas <%= item.status === 'active' ? 'fa-ban' : 'fa-check' %>"></i>
-                </button>
-              </form>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
+        <div class="link-group">
+            <p>Belum punya akun?</p>
+            
+            <a id="buy-link" href="#" target="_blank" class="contact-link buy-link">
+                <i class="fab fa-whatsapp"></i> Beli Sekarang (WhatsApp)
+            </a>
+
+            <a id="channel-link" href="#" target="_blank" class="contact-link channel-link">
+                <i class="fas fa-volume-up"></i> Saluran Owner (WhatsApp)
+            </a>
+        </div>
+    </div>
   </div>
+
+  <script>
+    // Toggle password visibility
+    const togglePassword = document.getElementById('togglePassword');
+    const password = document.getElementById('password');
+    
+    togglePassword.addEventListener('click', function() {
+      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+      password.setAttribute('type', type);
+      this.classList.toggle('fa-eye');
+      this.classList.toggle('fa-eye-slash');
+    });
+
+    // Auto-dismiss alert
+    window.addEventListener("DOMContentLoaded", () => {
+      const alertEl = document.querySelector(".alert");
+      if (alertEl) {
+        setTimeout(() => {
+          alertEl.style.transition = "opacity 0.5s ease-out";
+          alertEl.style.opacity = "0";
+          setTimeout(() => alertEl.remove(), 500);
+        }, 5000);
+      }
+    });
+
+    // Set dynamic content
+    const setContent = (id, prop, val) => {
+      const el = document.getElementById(id);
+      if (el) el[prop] = val;
+    };
+    
+    (async () => {
+      try {
+        const settings = await fetch("/set").then(res => res.json());
+        setContent("title", "textContent", settings.api_title || "Ochobot Database");
+        // Link WhatsApp Beli Sekarang (buy-link)
+        setContent("buy-link", "href", settings.contact_whatsapp || "https://wa.me/6283840240138");
+        // Link Saluran Owner (channel-link)
+        setContent("channel-link", "href", settings.channel_link || "https://whatsapp.com/channel/0029Vb6KMNq7IUYLgWR6KY0C");
+      } catch (error) {
+        console.error("Error loading settings:", error);
+        // Set default values if fetch fails
+        setContent("title", "textContent", "Ochobot Database");
+        setContent("buy-link", "href", "https://wa.me/6283840240138");
+        setContent("channel-link", "href", "https://whatsapp.com/channel/0029Vb6KMNq7IUYLgWR6KY0C");
+      }
+    })();
+  </script>
 </body>
 </html>
