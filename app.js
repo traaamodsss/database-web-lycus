@@ -7,6 +7,7 @@ const app = express();
 
 require('dotenv').config();
 
+// Konfigurasi GitHub dari Env
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
@@ -21,12 +22,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('trust proxy', 1);
 app.use(session({
-  secret: 'raza-mods-secret',
+  secret: 'raza-mods-final-fix',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
+// --- FUNGSI CORE GITHUB ---
 async function fetchData() {
   try {
     const res = await fetch(GITHUB_API_URL, {
@@ -41,30 +43,32 @@ async function fetchData() {
 
 async function updateData(newData) {
   try {
-    const getRes = await fetch(GITHUB_API_URL, { headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' } });
+    const getRes = await fetch(GITHUB_API_URL, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
+    });
     const getData = await getRes.json();
     if (!getData.sha) return false;
+
     const base64Content = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64');
     const putRes = await fetch(GITHUB_API_URL, {
       method: 'PUT',
       headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Update via Web', content: base64Content, sha: getData.sha })
+      body: JSON.stringify({ message: 'Update Data', content: base64Content, sha: getData.sha })
     });
     return putRes.ok;
   } catch (e) { return false; }
 }
 
-// -- ROUTES --
+// --- ROUTES ---
 
 app.get('/set', (req, res) => {
   res.json({ 
-    contact_whatsapp: process.env.CONTACT_OWNER || "https://wa.me/6283840240138",
-    api_title: process.env.API_TITLE || "Ochobot Database",
-    channel_link: "https://whatsapp.com/channel/0029Vb6KMNq7IUYLgWR6KY0C"
+    contact_whatsapp: process.env.CONTACT_OWNER || "#",
+    api_title: process.env.API_TITLE || "Ochobot Database"
   });
 });
 
-// Halaman Tabel Admin
+// Route Admin Dashboard
 app.get('/admin', async (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/login-admin');
   const data = await fetchData();
@@ -72,25 +76,40 @@ app.get('/admin', async (req, res) => {
   res.render('admin', { data, message: msg });
 });
 
-// PROSES TAMBAH NOMOR (Ubah action ke sini)
-app.post('/aksi-tambah', async (req, res) => {
+// LOGIN ADMIN
+app.get('/login-admin', (req, res) => res.render('login-admin', { message: null }));
+app.post('/login-admin', (req, res) => {
+  if (req.body.password === process.env.PW_ADMIN_LOGIN) {
+    req.session.isAdmin = true;
+    res.redirect('/admin');
+  } else {
+    res.render('login-admin', { message: "Sandi Salah!" });
+  }
+});
+
+// --- AKSI POST (BIAR GAK CANNOT POST) ---
+
+// Tambah Nomor
+app.post('/addnumber', async (req, res) => {
+  if (!req.session.isAdmin) return res.redirect('/login-admin');
   let { number } = req.body;
   if (!number) return res.redirect('/admin');
+  
   let data = await fetchData();
   number = number.replace(/[^0-9]/g, "");
   if (!data.find(i => i.number === number)) {
     data.push({ number, status: 'active' });
     await updateData(data);
-    req.session.message = "Berhasil Menambah Nomor! ✓";
+    req.session.message = "Berhasil Menambah Nomor!";
   } else {
     req.session.message = "Nomor Sudah Ada!";
   }
   res.redirect('/admin');
 });
 
-// PROSES HAPUS
-app.post('/aksi-hapus', async (req, res) => {
-  if (!req.session.isAdmin) return res.status(403).send('Forbidden');
+// Hapus Nomor
+app.post('/deletenumber', async (req, res) => {
+  if (!req.session.isAdmin) return res.redirect('/login-admin');
   let data = await fetchData();
   data = data.filter(i => i.number !== req.body.number);
   await updateData(data);
@@ -98,15 +117,14 @@ app.post('/aksi-hapus', async (req, res) => {
   res.redirect('/admin');
 });
 
-// Login Admin
-app.get('/login-admin', (req, res) => res.render('login-admin', { message: null }));
-app.post('/login-admin', (req, res) => {
-  if (req.body.password === process.env.PW_ADMIN_LOGIN) {
-    req.session.isAdmin = true;
-    res.redirect('/admin');
-  } else {
-    res.redirect('/login-admin');
-  }
+// Blacklist/Whitelist
+app.post('/statusnumber', async (req, res) => {
+  if (!req.session.isAdmin) return res.redirect('/login-admin');
+  let data = await fetchData();
+  data = data.map(i => i.number === req.body.number ? { ...i, status: req.body.status } : i);
+  await updateData(data);
+  req.session.message = "Status Berhasil Diubah!";
+  res.redirect('/admin');
 });
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login-admin'); });
