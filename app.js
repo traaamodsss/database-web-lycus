@@ -22,154 +22,110 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('trust proxy', 1);
 app.use(session({
-  secret: 'exofloods-final-secret',
+  secret: 'exofloods-super-secret',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-// --- FUNGSI CORE GITHUB ---
+// --- CORE FUNCTIONS ---
 async function fetchData() {
   try {
-    const response = await fetch(GITHUB_API_URL, {
+    const res = await fetch(GITHUB_API_URL, {
       headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
     });
-    const result = await response.json();
-    if (!result.content) return [];
-    const content = Buffer.from(result.content, 'base64').toString('utf-8');
-    const parsed = JSON.parse(content);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    console.error("Fetch Error:", e);
-    return [];
-  }
+    const json = await res.json();
+    if (!json.content) return [];
+    const content = Buffer.from(json.content, 'base64').toString('utf-8');
+    return JSON.parse(content);
+  } catch (e) { return []; }
 }
 
 async function updateData(newData) {
   try {
-    // WAJIB ambil SHA terbaru setiap kali aksi agar tidak Conflict 409
     const getRes = await fetch(GITHUB_API_URL, {
       headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
     });
     const getData = await getRes.json();
-    
-    if (!getData.sha) {
-      console.error("Gagal dapet SHA:", getData.message);
-      return false;
-    }
+    if (!getData.sha) return false;
 
     const base64Content = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64');
     const putRes = await fetch(GITHUB_API_URL, {
       method: 'PUT',
       headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'Update via Web',
-        content: base64Content,
-        sha: getData.sha
-      })
+      body: JSON.stringify({ message: 'Web Update', content: base64Content, sha: getData.sha })
     });
-    
     return putRes.ok;
-  } catch (e) {
-    console.error("Update Error:", e);
-    return false;
-  }
+  } catch (e) { return false; }
 }
 
 // --- ROUTES ---
+app.get('/set', (req, res) => res.json({ contact_whatsapp: process.env.CONTACT_OWNER, api_title: process.env.API_TITLE }));
 
-app.get('/set', (req, res) => res.json({ 
-    contact_whatsapp: process.env.CONTACT_OWNER, 
-    api_title: process.env.API_TITLE 
-}));
-
-// Admin & User Dashboard
+// Dashboard User
 app.get('/', async (req, res) => {
   if (!req.session.isUser) return res.redirect('/login');
   const data = await fetchData();
-  const message = req.session.message;
+  res.render('user', { data, message: req.session.message });
   req.session.message = null;
-  res.render('user', { data, message });
 });
 
-app.get('/admin', async (req, res) => {
-  if (!req.session.isAdmin) return res.redirect('/login-admin');
-  const data = await fetchData();
-  const message = req.session.message;
-  req.session.message = null;
-  res.render('admin', { data, message });
-});
-
-// Aksi Tambah Nomor (User)
+// Aksi User: Tambah Nomor
 app.post('/add', async (req, res) => {
   let { number } = req.body;
-  if (!number) return res.redirect('/');
-  
   let data = await fetchData();
   number = number.replace(/[^0-9]/g, "");
-  
   if (data.find(i => i.number === number)) {
-    req.session.message = "Nomor sudah terdaftar!";
+    req.session.message = "Nomor sudah ada!";
   } else {
     data.push({ number, status: 'active' });
-    const success = await updateData(data);
-    req.session.message = success ? "Berhasil menambah nomor ✓" : "Gagal simpan (Cek Token/Repo) ❌";
+    await updateData(data);
+    req.session.message = "Berhasil ditambah!";
   }
   res.redirect('/');
 });
 
-// Aksi Admin (Hapus/Blacklist/Whitelist)
-app.post('/delete', async (req, res) => {
+// Dashboard Admin
+app.get('/admin', async (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/login-admin');
+  const data = await fetchData();
+  res.render('admin', { data, message: req.session.message });
+  req.session.message = null;
+});
+
+// Aksi Admin: Hapus (POST)
+app.post('/delete-action', async (req, res) => {
+  if (!req.session.isAdmin) return res.status(403).send('Forbidden');
   let data = await fetchData();
-  data = data.filter(item => item.number !== req.body.number);
-  const success = await updateData(data);
-  req.session.message = success ? "Berhasil dihapus ✓" : "Gagal hapus ❌";
+  data = data.filter(i => i.number !== req.body.number);
+  await updateData(data);
+  req.session.message = "Nomor dihapus!";
   res.redirect('/admin');
 });
 
-app.post('/blacklist', async (req, res) => {
-  if (!req.session.isAdmin) return res.redirect('/login-admin');
+// Aksi Admin: Status (POST)
+app.post('/status-action', async (req, res) => {
+  if (!req.session.isAdmin) return res.status(403).send('Forbidden');
   let data = await fetchData();
-  data = data.map(i => i.number === req.body.number ? { ...i, status: 'blacklist' } : i);
-  const success = await updateData(data);
-  req.session.message = success ? "Berhasil blacklist ✓" : "Gagal update ❌";
-  res.redirect('/admin');
-});
-
-app.post('/whitelist', async (req, res) => {
-  if (!req.session.isAdmin) return res.redirect('/login-admin');
-  let data = await fetchData();
-  data = data.map(i => i.number === req.body.number ? { ...i, status: 'active' } : i);
-  const success = await updateData(data);
-  req.session.message = success ? "Berhasil diaktifkan ✓" : "Gagal update ❌";
+  data = data.map(i => i.number === req.body.number ? { ...i, status: req.body.status } : i);
+  await updateData(data);
+  req.session.message = "Status diperbarui!";
   res.redirect('/admin');
 });
 
 // Auth
 app.get('/login', (req, res) => res.render('login', { message: null }));
 app.post('/login', (req, res) => {
-  if (req.body.password === process.env.PW_USER_LOGIN) {
-    req.session.isUser = true;
-    res.redirect('/');
-  } else {
-    res.render('login', { message: "Sandi Salah!" });
-  }
+  if (req.body.password === process.env.PW_USER_LOGIN) { req.session.isUser = true; res.redirect('/'); }
+  else res.render('login', { message: "Sandi Salah!" });
 });
 
 app.get('/login-admin', (req, res) => res.render('login-admin', { message: null }));
 app.post('/login-admin', (req, res) => {
-  if (req.body.password === process.env.PW_ADMIN_LOGIN) {
-    req.session.isAdmin = true;
-    res.redirect('/admin');
-  } else {
-    res.render('login-admin', { message: "Sandi Admin Salah!" });
-  }
+  if (req.body.password === process.env.PW_ADMIN_LOGIN) { req.session.isAdmin = true; res.redirect('/admin'); }
+  else res.render('login-admin', { message: "Sandi Admin Salah!" });
 });
 
-app.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/login');
-});
+app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login'); });
 
 module.exports = app;
