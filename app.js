@@ -7,7 +7,6 @@ const app = express();
 
 require('dotenv').config();
 
-// Config GitHub
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
@@ -22,13 +21,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('trust proxy', 1);
 app.use(session({
-  secret: 'exofloods-super-secret',
+  secret: 'exofloods-super-secret-key',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-// --- CORE FUNCTIONS ---
+// --- FUNGSI AMBIL DATA ---
 async function fetchData() {
   try {
     const res = await fetch(GITHUB_API_URL, {
@@ -41,6 +40,7 @@ async function fetchData() {
   } catch (e) { return []; }
 }
 
+// --- FUNGSI UPDATE DATA ---
 async function updateData(newData) {
   try {
     const getRes = await fetch(GITHUB_API_URL, {
@@ -53,7 +53,7 @@ async function updateData(newData) {
     const putRes = await fetch(GITHUB_API_URL, {
       method: 'PUT',
       headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Web Update', content: base64Content, sha: getData.sha })
+      body: JSON.stringify({ message: 'Dashboard Update', content: base64Content, sha: getData.sha })
     });
     return putRes.ok;
   } catch (e) { return false; }
@@ -62,50 +62,47 @@ async function updateData(newData) {
 // --- ROUTES ---
 app.get('/set', (req, res) => res.json({ contact_whatsapp: process.env.CONTACT_OWNER, api_title: process.env.API_TITLE }));
 
-// Dashboard User
+// Dashboard User & Tambah Nomor
 app.get('/', async (req, res) => {
   if (!req.session.isUser) return res.redirect('/login');
   const data = await fetchData();
-  res.render('user', { data, message: req.session.message });
-  req.session.message = null;
+  const msg = req.session.message; req.session.message = null;
+  res.render('user', { data, message: msg });
 });
 
-// Aksi User: Tambah Nomor
-app.post('/add', async (req, res) => {
+app.post('/tambah-nomor', async (req, res) => {
   let { number } = req.body;
+  if (!number) return res.redirect('/');
   let data = await fetchData();
   number = number.replace(/[^0-9]/g, "");
-  if (data.find(i => i.number === number)) {
-    req.session.message = "Nomor sudah ada!";
-  } else {
+  if (data.find(i => i.number === number)) { req.session.message = "Nomor sudah ada!"; }
+  else {
     data.push({ number, status: 'active' });
     await updateData(data);
-    req.session.message = "Berhasil ditambah!";
+    req.session.message = "Berhasil disimpan!";
   }
   res.redirect('/');
 });
 
-// Dashboard Admin
+// Dashboard Admin & Aksi
 app.get('/admin', async (req, res) => {
   if (!req.session.isAdmin) return res.redirect('/login-admin');
   const data = await fetchData();
-  res.render('admin', { data, message: req.session.message });
-  req.session.message = null;
+  const msg = req.session.message; req.session.message = null;
+  res.render('admin', { data, message: msg });
 });
 
-// Aksi Admin: Hapus (POST)
-app.post('/delete-action', async (req, res) => {
-  if (!req.session.isAdmin) return res.status(403).send('Forbidden');
+app.post('/hapus-nomor', async (req, res) => {
+  if (!req.session.isAdmin) return res.status(403).send('Akses Ditolak');
   let data = await fetchData();
   data = data.filter(i => i.number !== req.body.number);
   await updateData(data);
-  req.session.message = "Nomor dihapus!";
+  req.session.message = "Nomor telah dihapus!";
   res.redirect('/admin');
 });
 
-// Aksi Admin: Status (POST)
-app.post('/status-action', async (req, res) => {
-  if (!req.session.isAdmin) return res.status(403).send('Forbidden');
+app.post('/status-nomor', async (req, res) => {
+  if (!req.session.isAdmin) return res.status(403).send('Akses Ditolak');
   let data = await fetchData();
   data = data.map(i => i.number === req.body.number ? { ...i, status: req.body.status } : i);
   await updateData(data);
@@ -117,13 +114,13 @@ app.post('/status-action', async (req, res) => {
 app.get('/login', (req, res) => res.render('login', { message: null }));
 app.post('/login', (req, res) => {
   if (req.body.password === process.env.PW_USER_LOGIN) { req.session.isUser = true; res.redirect('/'); }
-  else res.render('login', { message: "Sandi Salah!" });
+  else { res.render('login', { message: "Sandi Salah!" }); }
 });
 
 app.get('/login-admin', (req, res) => res.render('login-admin', { message: null }));
 app.post('/login-admin', (req, res) => {
   if (req.body.password === process.env.PW_ADMIN_LOGIN) { req.session.isAdmin = true; res.redirect('/admin'); }
-  else res.render('login-admin', { message: "Sandi Admin Salah!" });
+  else { res.render('login-admin', { message: "Sandi Admin Salah!" }); }
 });
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login'); });
