@@ -52,27 +52,31 @@
           </tr>
         </thead>
         <tbody>
-          <% data.forEach(item => { %>
-            <tr>
-              <td><%= item.number %></td>
-              <td><span style="font-weight: bold; color: <%= item.status === 'active' ? 'green' : 'red' %>;"><%= item.status %></span></td>
-              <td>
-                <form action="/aksi-hapus" method="POST" style="display:inline;" onsubmit="return confirm('Hapus?')">
-                  <input type="hidden" name="number" value="<%= item.number %>">
-                  <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i></button>
-                </form>
+  <% data.forEach(item => { %>
+    <tr>
+      <td><%= item.number %></td>
+      <td>
+        <span class="status-badge status-<%= item.status %>">
+          <%= item.status %>
+        </span>
+      </td>
+      <td class="actions">
+        <form action="/deletenumber" method="POST" style="display:inline;" onsubmit="return confirm('Yakin hapus?')">
+          <input type="hidden" name="number" value="<%= item.number %>">
+          <button type="submit" class="btn-action btn-danger"><i class="fas fa-trash"></i></button>
+        </form>
 
-                <form action="/aksi-status" method="POST" style="display:inline;">
-                  <input type="hidden" name="number" value="<%= item.number %>">
-                  <input type="hidden" name="status" value="<%= item.status === 'active' ? 'blacklist' : 'active' %>">
-                  <button type="submit" class="btn <%= item.status === 'active' ? 'btn-warning' : 'btn-success' %>">
-                    <i class="fas <%= item.status === 'active' ? 'fa-ban' : 'fa-check' %>"></i>
-                  </button>
-                </form>
-              </td>
-            </tr>
-          <% }) %>
-        </tbody>
+        <form action="/statusnumber" method="POST" style="display:inline;">
+          <input type="hidden" name="number" value="<%= item.number %>">
+          <input type="hidden" name="status" value="<%= item.status === 'active' ? 'blacklist' : 'active' %>">
+          <button type="submit" class="btn-action <%= item.status === 'active' ? 'btn-warning' : 'btn-success' %>">
+            <i class="fas <%= item.status === 'active' ? 'fa-ban' : 'fa-check' %>"></i>
+          </button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+</tbody>
       </table>
     </div>
   </div>
