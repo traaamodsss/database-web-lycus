@@ -50,24 +50,44 @@ async function fetchData() {
 }
 
 async function updateData(newData) {
-  const current = await fetch(GITHUB_API_URL, {
-    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-  }).then(res => res.json());
+  try {
+    // 1. Ambil data terbaru untuk mendapatkan SHA terbaru
+    const res = await fetch(GITHUB_API_URL, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+    });
+    const current = await res.json();
 
-  const base64Content = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64');
+    if (!current.sha) {
+      console.error("Gagal mendapatkan SHA file:", current.message);
+      return;
+    }
 
-  await fetch(GITHUB_API_URL, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `token ${GITHUB_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      message: 'Update database.json',
-      content: base64Content,
-      sha: current.sha
-    })
-  });
+    // 2. Encode konten baru ke Base64
+    const base64Content = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64');
+
+    // 3. Kirim update ke GitHub
+    const updateRes = await fetch(GITHUB_API_URL, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Update database via Web Dashboard',
+        content: base64Content,
+        sha: current.sha // SHA wajib disertakan untuk update
+      })
+    });
+
+    const result = await updateRes.json();
+    if (result.content) {
+      console.log("Database berhasil diperbarui di GitHub");
+    } else {
+      console.error("Gagal update GitHub:", result.message);
+    }
+  } catch (err) {
+    console.error("Error pada fungsi updateData:", err);
+  }
 }
 
 function authMiddleware(req, res, next) {
