@@ -2,8 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Dashboard</title>
+  <title>Admin Panel</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
   <style>
@@ -12,27 +11,23 @@
     .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 900px; margin: auto; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    .btn { border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: white; transition: 0.3s; }
-    .btn-danger { background: var(--danger); }
-    .btn-warning { background: var(--warning); }
-    .btn-success { background: var(--success); }
+    .btn { border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: white; }
+    .btn-danger { background: var(--danger); } .btn-warning { background: var(--warning); } .btn-success { background: var(--success); }
     .alert { background: #dcfce7; color: #166534; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>Admin Dashboard</h2>
-    <a href="/logout" style="color: red; text-decoration: none;">Logout</a>
-    
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2>Admin Dashboard</h2>
+      <a href="/logout" style="color:red; text-decoration:none;">Logout</a>
+    </div>
+
     <% if (message) { %> <div class="alert"><%= message %></div> <% } %>
 
     <table>
       <thead>
-        <tr>
-          <th>Nomor</th>
-          <th>Status</th>
-          <th>Aksi</th>
-        </tr>
+        <tr><th>Nomor</th><th>Status</th><th>Aksi</th></tr>
       </thead>
       <tbody>
         <% data.forEach(item => { %>
@@ -40,20 +35,17 @@
             <td><%= item.number %></td>
             <td><strong><%= item.status %></strong></td>
             <td>
-              <form action="/delete-action" method="POST" style="display:inline;" onsubmit="return confirm('Hapus?')">
+              <form action="/hapus-nomor" method="POST" style="display:inline;" onsubmit="return confirm('Hapus?')">
                 <input type="hidden" name="number" value="<%= item.number %>">
                 <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i></button>
               </form>
 
-              <form action="/status-action" method="POST" style="display:inline;">
+              <form action="/status-nomor" method="POST" style="display:inline;">
                 <input type="hidden" name="number" value="<%= item.number %>">
-                <% if (item.status === 'active') { %>
-                  <input type="hidden" name="status" value="blacklist">
-                  <button type="submit" class="btn btn-warning"><i class="fas fa-ban"></i></button>
-                <% } else { %>
-                  <input type="hidden" name="status" value="active">
-                  <button type="submit" class="btn btn-success"><i class="fas fa-check"></i></button>
-                <% } %>
+                <input type="hidden" name="status" value="<%= item.status === 'active' ? 'blacklist' : 'active' %>">
+                <button type="submit" class="btn <%= item.status === 'active' ? 'btn-warning' : 'btn-success' %>">
+                  <i class="fas <%= item.status === 'active' ? 'fa-ban' : 'fa-check' %>"></i>
+                </button>
               </form>
             </td>
           </tr>
