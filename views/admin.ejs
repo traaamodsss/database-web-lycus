@@ -3,259 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin - Database Dashboard</title>
+  <title>Admin Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --primary: #4361ee;
-      --primary-light: #e0e7ff;
-      --secondary: #3f37c9;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --dark: #1e293b;
-      --light: #f8fafc;
-      --gray: #64748b;
-      --gray-light: #e2e8f0;
-    }
-
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #f1f5f9;
-      color: var(--dark);
-      line-height: 1.6;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-
-    header {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      padding: 2.5rem 2rem;
-      border-radius: 1.5rem;
-      color: white;
-      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
-      margin-bottom: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .header-content {
-      position: relative;
-      z-index: 1;
-    }
-
-    .logout-btn {
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      text-decoration: none;
-      padding: 0.5rem 1rem;
-      border-radius: 0.75rem;
-      font-size: 0.875rem;
-      backdrop-filter: blur(5px);
-      transition: all 0.3s;
-    }
-
-    .logout-btn:hover {
-      background: var(--danger);
-    }
-
-    .alert {
-      padding: 1rem 1.5rem;
-      border-radius: 1rem;
-      margin-bottom: 1.5rem;
-      animation: slideIn 0.4s ease-out;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .alert-success { background-color: #dcfce7; color: #166534; border-left: 5px solid var(--success); }
-    .alert-danger { background-color: #fee2e2; color: #991b1b; border-left: 5px solid var(--danger); }
-
-    .card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 1.5rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    .table-container {
-      overflow-x: auto;
-      margin-top: 1.5rem;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    th {
-      background-color: var(--light);
-      padding: 1rem;
-      color: var(--gray);
-      font-weight: 600;
-      border-bottom: 2px solid var(--gray-light);
-    }
-
-    td {
-      padding: 1rem;
-      border-bottom: 1px solid var(--gray-light);
-    }
-
-    .status-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 2rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .status-active { background: #dcfce7; color: #166534; }
-    .status-blacklist { background: #fee2e2; color: #991b1b; }
-
-    .actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .btn-action {
-      border: none;
-      width: 35px;
-      height: 35px;
-      border-radius: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: transform 0.2s;
-      color: white;
-    }
-
-    .btn-danger { background-color: var(--danger); }
-    .btn-warning { background-color: var(--warning); }
-    .btn-success { background-color: var(--success); }
-    
-    .btn-action:hover { transform: scale(1.1); }
-
-    .search-box {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 2px solid var(--gray-light);
-      border-radius: 1rem;
-      margin-bottom: 1rem;
-      font-family: inherit;
-    }
-
-    @keyframes slideIn {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+    :root { --primary: #4361ee; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; }
+    body { font-family: 'Poppins', sans-serif; background: #f1f5f9; padding: 20px; }
+    .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 900px; margin: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .btn { border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: white; transition: 0.3s; }
+    .btn-danger { background: var(--danger); }
+    .btn-warning { background: var(--warning); }
+    .btn-success { background: var(--success); }
+    .alert { background: #dcfce7; color: #166534; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-      <div class="header-content">
-        <h1 id="title">Admin Dashboard</h1>
-        <p>Manage all database numbers efficiently</p>
-      </div>
-    </header>
+  <div class="card">
+    <h2>Admin Dashboard</h2>
+    <a href="/logout" style="color: red; text-decoration: none;">Logout</a>
+    
+    <% if (message) { %> <div class="alert"><%= message %></div> <% } %>
 
-    <% if (message) { %>
-      <div class="alert <%= message.includes('Berhasil') ? 'alert-success' : 'alert-danger' %>">
-        <i class="fas <%= message.includes('Berhasil') ? 'fa-check-circle' : 'fa-exclamation-circle' %>"></i>
-        <%= message %>
-      </div>
-    <% } %>
+    <table>
+      <thead>
+        <tr>
+          <th>Nomor</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% data.forEach(item => { %>
+          <tr>
+            <td><%= item.number %></td>
+            <td><strong><%= item.status %></strong></td>
+            <td>
+              <form action="/delete-action" method="POST" style="display:inline;" onsubmit="return confirm('Hapus?')">
+                <input type="hidden" name="number" value="<%= item.number %>">
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i></button>
+              </form>
 
-    <div class="card">
-      <input type="text" id="searchInput" class="search-box" onkeyup="filterTable()" placeholder="Cari nomor...">
-      
-      <div class="table-container">
-        <table id="numberTable">
-          <thead>
-            <tr>
-              <th>Nomor</th>
-              <th>Status</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (data && data.length > 0) { %>
-              <% data.forEach(item => { %>
-                <tr>
-                  <td><%= item.number %></td>
-                  <td>
-                    <span class="status-badge status-<%= item.status %>">
-                      <%= item.status %>
-                    </span>
-                  </td>
-                  <td>
-                    <div class="actions">
-                      <form action="/delete" method="POST" onsubmit="return confirm('Yakin hapus nomor ini?')">
-                        <input type="hidden" name="number" value="<%= item.number %>">
-                        <button type="submit" class="btn-action btn-danger" title="Hapus"><i class="fas fa-trash"></i></button>
-                      </form>
-
-                      <% if (item.status === 'active') { %>
-                        <form action="/blacklist" method="POST">
-                          <input type="hidden" name="number" value="<%= item.number %>">
-                          <button type="submit" class="btn-action btn-warning" title="Blacklist"><i class="fas fa-ban"></i></button>
-                        </form>
-                      <% } else { %>
-                        <form action="/whitelist" method="POST">
-                          <input type="hidden" name="number" value="<%= item.number %>">
-                          <button type="submit" class="btn-action btn-success" title="Aktifkan"><i class="fas fa-check"></i></button>
-                        </form>
-                      <% } %>
-                    </div>
-                  </td>
-                </tr>
-              <% }) %>
-            <% } else { %>
-              <tr><td colspan="3" style="text-align:center">Data kosong</td></tr>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
-    </div>
+              <form action="/status-action" method="POST" style="display:inline;">
+                <input type="hidden" name="number" value="<%= item.number %>">
+                <% if (item.status === 'active') { %>
+                  <input type="hidden" name="status" value="blacklist">
+                  <button type="submit" class="btn btn-warning"><i class="fas fa-ban"></i></button>
+                <% } else { %>
+                  <input type="hidden" name="status" value="active">
+                  <button type="submit" class="btn btn-success"><i class="fas fa-check"></i></button>
+                <% } %>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
   </div>
-
-  <script>
-    // Auto-fetch settings
-    (async () => {
-      try {
-        const res = await fetch("/set");
-        const settings = await res.json();
-        document.getElementById("title").textContent = settings.api_title + " Admin";
-      } catch (e) {}
-    })();
-
-    function filterTable() {
-      const input = document.getElementById("searchInput");
-      const filter = input.value.toLowerCase();
-      const rows = document.querySelectorAll("#numberTable tbody tr");
-      rows.forEach(row => {
-        const text = row.querySelector("td") ? row.querySelector("td").textContent.toLowerCase() : "";
-        row.style.display = text.includes(filter) ? "" : "none";
-      });
-    }
-  </script>
 </body>
 </html>
